@@ -18,6 +18,7 @@ namespace MatchTextSplitPDF
         public Form1()
         {
             InitializeComponent();
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
         }
 
         private void OpenExcel_Click(object sender, EventArgs e)
@@ -26,8 +27,8 @@ namespace MatchTextSplitPDF
             if (openExcelDialog.ShowDialog() == DialogResult.OK)
             {
                 //Get the path of specified file
-                textBox1.Text = openExcelDialog.FileName;
-                using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + textBox1.Text)))
+                ExcelPath.Text = openExcelDialog.FileName;
+                using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + ExcelPath.Text)))
                 {
                     foreach (var worksheet in xlPackage.Workbook.Worksheets)
                     {
@@ -36,13 +37,13 @@ namespace MatchTextSplitPDF
                 }
                 comboBoxExcelSheetNames.SelectedIndex = 0;
             }
-            if (textBox1.Text != "" && textBox4.Text != "" && textBox2.Text != "") { Start.Enabled = true; }
+            //if (textBox1.Text != "" && textBox4.Text != "" && textBox2.Text != "") { Start.Enabled = true; }
 
         }
 
         private void comboBoxExcelSheetNames_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string filePath = textBox1.Text;
+            string filePath = ExcelPath.Text;
             string sheetName = comboBoxExcelSheetNames.SelectedItem.ToString();
 
             comboBox1.Items.Clear();
@@ -59,11 +60,38 @@ namespace MatchTextSplitPDF
                     string columnLetter = ExcelCellAddress.GetColumnLetter(columnNumber);
                     comboBox1.Items.Add(columnLetter);
                 }
-
                 comboBox2.Items.AddRange(comboBox1.Items.Cast<object>().ToArray());
-                comboBox1.SelectedIndex = 0;
-                comboBox2.SelectedIndex = 1;
+
+                if (comboBox1.Items.Count >= 2)
+                {
+                    comboBox1.SelectedIndex = 0;
+                    comboBox2.SelectedIndex = 1;
+                }
+                else if(comboBox1.Items.Count == 1)
+                {
+                    comboBox1.SelectedIndex = 0;
+                }
             }
+        }
+
+        private void SplitInFolders_CheckedChanged(object sender, EventArgs e)
+        {
+            if (SplitInFolders.Checked)
+            {
+
+                comboBox2.Visible = true; ColunaFoldersLabel.Visible = true;
+
+            }
+            else
+            {
+
+                comboBox2.Visible = false; ColunaFoldersLabel.Visible = false;
+            }
+        }
+
+        private void OpenPDF_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
