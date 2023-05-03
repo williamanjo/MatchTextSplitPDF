@@ -42,6 +42,9 @@
             this.ExcelPath = new System.Windows.Forms.TextBox();
             this.openExcelDialog = new System.Windows.Forms.OpenFileDialog();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.OpenSaveFolder = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.FolderSavePath = new System.Windows.Forms.TextBox();
             this.OpenPDF = new System.Windows.Forms.Button();
             this.PDFLabel = new System.Windows.Forms.Label();
             this.PdfPath = new System.Windows.Forms.TextBox();
@@ -173,19 +176,49 @@
             // 
             // openExcelDialog
             // 
-            this.openExcelDialog.Filter = "Planilhas (.xls)|*.xls| Planilhas (.xlsx)|*.xlsx| Planilhas (*.xlsm)|*.xlsm";
+            this.openExcelDialog.Filter = "Planilhas Excel (.xls, .xlsx, .xlsm)|.xls;*.xlsx;*.xlsm";
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.OpenSaveFolder);
+            this.groupBox2.Controls.Add(this.label3);
+            this.groupBox2.Controls.Add(this.FolderSavePath);
             this.groupBox2.Controls.Add(this.OpenPDF);
             this.groupBox2.Controls.Add(this.PDFLabel);
             this.groupBox2.Controls.Add(this.PdfPath);
             this.groupBox2.Location = new System.Drawing.Point(13, 127);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(702, 80);
+            this.groupBox2.Size = new System.Drawing.Size(702, 109);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "PdfData";
+            // 
+            // OpenSaveFolder
+            // 
+            this.OpenSaveFolder.Location = new System.Drawing.Point(612, 67);
+            this.OpenSaveFolder.Name = "OpenSaveFolder";
+            this.OpenSaveFolder.Size = new System.Drawing.Size(75, 23);
+            this.OpenSaveFolder.TabIndex = 8;
+            this.OpenSaveFolder.Text = "Open";
+            this.OpenSaveFolder.UseVisualStyleBackColor = true;
+            this.OpenSaveFolder.Click += new System.EventHandler(this.OpenSaveFolder_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(23, 72);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(60, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Salvar em :";
+            // 
+            // FolderSavePath
+            // 
+            this.FolderSavePath.Location = new System.Drawing.Point(89, 69);
+            this.FolderSavePath.Name = "FolderSavePath";
+            this.FolderSavePath.ReadOnly = true;
+            this.FolderSavePath.Size = new System.Drawing.Size(517, 20);
+            this.FolderSavePath.TabIndex = 6;
             // 
             // OpenPDF
             // 
@@ -250,6 +283,9 @@
         private System.Windows.Forms.Button OpenPDF;
         private System.Windows.Forms.Label PDFLabel;
         private System.Windows.Forms.TextBox PdfPath;
+        private System.Windows.Forms.Button OpenSaveFolder;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox FolderSavePath;
     }
 }
 

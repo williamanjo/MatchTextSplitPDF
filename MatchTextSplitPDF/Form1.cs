@@ -9,6 +9,7 @@ using iTextSharp.text.pdf.parser;
 using System.Collections.Generic;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 
 namespace MatchTextSplitPDF
@@ -18,6 +19,7 @@ namespace MatchTextSplitPDF
         public Form1()
         {
             InitializeComponent();
+            OpenExcel.Select();
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
         }
 
@@ -92,6 +94,19 @@ namespace MatchTextSplitPDF
         private void OpenPDF_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void OpenSaveFolder_Click(object sender, EventArgs e)
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog()) {
+
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    FolderSavePath.Text =  dialog.FileName;
+                }
+            }
+            
         }
     }
 }
