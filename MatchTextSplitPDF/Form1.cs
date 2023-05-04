@@ -5,12 +5,11 @@ using OfficeOpenXml;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Windows.Forms;
-using iTextSharp.text.pdf.parser;
-using System.Collections.Generic;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 using Microsoft.WindowsAPICodePack.Dialogs;
-
+using iTextSharp.text.pdf.parser;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Collections.Generic;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace MatchTextSplitPDF
 {
@@ -39,7 +38,7 @@ namespace MatchTextSplitPDF
                 }
                 comboBoxExcelSheetNames.SelectedIndex = 0;
             }
-            //if (textBox1.Text != "" && textBox4.Text != "" && textBox2.Text != "") { Start.Enabled = true; }
+            if (ExcelPath.Text != "" && PdfPath.Text != "" && FolderSavePath.Text != "") { Start.Enabled = true; }
 
         }
 
@@ -93,20 +92,154 @@ namespace MatchTextSplitPDF
 
         private void OpenPDF_Click(object sender, EventArgs e)
         {
-
+            if (openPdfDialog.ShowDialog() == DialogResult.OK) { 
+                PdfPath.Text = openPdfDialog.FileName;  
+            }
+            if (ExcelPath.Text != "" && PdfPath.Text != "" && FolderSavePath.Text != "") { Start.Enabled = true; }
         }
 
         private void OpenSaveFolder_Click(object sender, EventArgs e)
         {
-            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog()) {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
 
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    FolderSavePath.Text =  dialog.FileName;
+                    FolderSavePath.Text = dialog.FileName;
                 }
             }
-            
+            if (ExcelPath.Text != "" && PdfPath.Text != "" && FolderSavePath.Text != "") { Start.Enabled = true; }
         }
+        private void BlockUI(bool block)
+        {
+
+            OpenExcel.Enabled = block;
+            comboBoxExcelSheetNames.Enabled = block;
+            comboBox1.Enabled = block;
+            comboBox2.Enabled = block;
+            checkBox1.Enabled = block;
+            SplitInFolders.Enabled = block;
+            OpenPDF.Enabled = block;
+            OpenSaveFolder.Enabled = block;
+
+
+
+        }
+
+        private void Start_Click(object sender, EventArgs e)
+        {
+            if (Start.Text != "Cancelar")
+            {
+                WriteLog("-----------------Starting----------------", Log);
+                BlockUI(true);
+                Start.Text = "Cancelar";
+
+                using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + Log.Text)))
+                {
+
+                    var myWorksheet = xlPackage.Workbook.Worksheets[comboBoxExcelSheetNames.SelectedIndex]; //select sheet here
+                    var totalRows = myWorksheet.Dimension.End.Row;
+                    var totalColumns = myWorksheet.Dimension.End.Column;
+
+                    progressBar1.Maximum = checkBox1.Checked ? totalRows - 1 : totalRows;
+                    progressBar1.Value = 0;
+                    int rowNum = (checkBox1.Checked ? 2 : 1);
+                    while (rowNum <= totalRows && Start.Text == "Cancelar")
+                    {
+
+                        if (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value) != "-" && myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value != null && Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value) != "#N/D")
+                        {
+                            var item = new ExcelData
+                            {
+
+                                SearchText = (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value)),
+                                Folder = SplitInFolders.Checked ? (Convert.ToString(myWorksheet.Cells[rowNum, comboBox2.SelectedIndex].Value)) : null
+                            };
+                            WriteLog(Environment.NewLine + $"Procurando ({item.SearchText}) em {System.IO.Path.GetFileName(PdfPath.Text)}", Log);
+
+                            var Pag = SearchPdfText(PdfPath.Text, item.SearchText);
+
+                            if (Pag >= 1) { WriteLog($" Encontrado na Pagina {{{Pag}}}", Log); } else { WriteLog($" Não encontrado ", Log); }
+
+                            var Folder = SplitInFolders.Checked ? (FolderSavePath.Text + @"\" + item.Folder) : FolderSavePath.Text;
+
+                            CreateFolder(Folder);
+
+                            WriteLog($"Extraindo Pagina para {Folder + @"\" + item.SearchText + ".pdf"}", Log);
+                            WriteLog(Environment.NewLine +"----------------------------------------", Log);
+                            ExtractPage(PdfPath.Text, Folder + @"\" + item.SearchText + ".pdf", Pag);
+                        }
+
+                        progressBar1.Value++;
+                        rowNum++;
+                     }
+
+                }
+                BlockUI(false);
+            }
+            else
+            {
+                WriteLog("Cancelando.....", Log);
+                Start.Text = "Start";
+                BlockUI(false);
+
+            }
+
+        }
+        private void CreateFolder(string path)
+        {
+
+            if (!Directory.Exists(path)) // verifica se a pasta não existe
+            {
+                Directory.CreateDirectory(path); // cria a pasta
+            }
+
+        }
+
+
+        private int SearchPdfText(string pdfFilePath, string searchText)
+        {
+            using (PdfReader reader = new PdfReader(pdfFilePath))
+            {
+                for (int pageNum = 1; pageNum <= reader.NumberOfPages; pageNum++)
+                {
+                    ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+                    string currentPageText = PdfTextExtractor.GetTextFromPage(reader, pageNum, strategy);
+                    if (currentPageText.Contains(searchText))
+                    {
+                        return pageNum;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public void ExtractPage(string sourcePdfPath, string outputPdfPath, int pageNumber)
+        {
+            PdfReader reader = new PdfReader(sourcePdfPath);
+
+            // check if the page number is valid
+            if (pageNumber < 1 || pageNumber > reader.NumberOfPages)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageNumber), "Page number is out of range.");
+            }
+
+            // create a new document with the selected page
+            Document document = new Document(reader.GetPageSizeWithRotation(pageNumber));
+            PdfCopy copy = new PdfCopy(document, new FileStream(outputPdfPath, FileMode.Create));
+            document.Open();
+            copy.AddPage(copy.GetImportedPage(reader, pageNumber));
+
+            // save the new document
+            document.Close();
+            reader.Close();
+        }
+
+        public void WriteLog(string log, System.Windows.Forms.TextBox tb)
+        {
+            tb.AppendText(log + Environment.NewLine);
+        }
+
     }
 }

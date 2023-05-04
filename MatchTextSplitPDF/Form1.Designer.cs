@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.ColunaFoldersLabel = new System.Windows.Forms.Label();
             this.ColunaSearch = new System.Windows.Forms.Label();
@@ -42,14 +43,24 @@
             this.ExcelPath = new System.Windows.Forms.TextBox();
             this.openExcelDialog = new System.Windows.Forms.OpenFileDialog();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.OpenOnFinal = new System.Windows.Forms.CheckBox();
             this.OpenSaveFolder = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.FolderSavePath = new System.Windows.Forms.TextBox();
             this.OpenPDF = new System.Windows.Forms.Button();
             this.PDFLabel = new System.Windows.Forms.Label();
             this.PdfPath = new System.Windows.Forms.TextBox();
+            this.openPdfDialog = new System.Windows.Forms.OpenFileDialog();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.Log = new System.Windows.Forms.TextBox();
+            this.Start = new System.Windows.Forms.Button();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -180,6 +191,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.OpenOnFinal);
             this.groupBox2.Controls.Add(this.OpenSaveFolder);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Controls.Add(this.FolderSavePath);
@@ -188,10 +200,20 @@
             this.groupBox2.Controls.Add(this.PdfPath);
             this.groupBox2.Location = new System.Drawing.Point(13, 127);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(702, 109);
+            this.groupBox2.Size = new System.Drawing.Size(702, 121);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "PdfData";
+            // 
+            // OpenOnFinal
+            // 
+            this.OpenOnFinal.AutoSize = true;
+            this.OpenOnFinal.Location = new System.Drawing.Point(89, 95);
+            this.OpenOnFinal.Name = "OpenOnFinal";
+            this.OpenOnFinal.Size = new System.Drawing.Size(103, 17);
+            this.OpenOnFinal.TabIndex = 9;
+            this.OpenOnFinal.Text = "Abrir ao Concluir";
+            this.OpenOnFinal.UseVisualStyleBackColor = true;
             // 
             // OpenSaveFolder
             // 
@@ -247,20 +269,93 @@
             this.PdfPath.Size = new System.Drawing.Size(535, 20);
             this.PdfPath.TabIndex = 3;
             // 
+            // openPdfDialog
+            // 
+            this.openPdfDialog.FileName = "openPdfDialog";
+            this.openPdfDialog.Filter = "Pdf (*.pdf)| *.pdf;";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.Log);
+            this.groupBox3.Location = new System.Drawing.Point(12, 296);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(702, 211);
+            this.groupBox3.TabIndex = 2;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Log";
+            // 
+            // Log
+            // 
+            this.Log.Enabled = false;
+            this.Log.Location = new System.Drawing.Point(6, 19);
+            this.Log.Multiline = true;
+            this.Log.Name = "Log";
+            this.Log.ReadOnly = true;
+            this.Log.Size = new System.Drawing.Size(690, 179);
+            this.Log.TabIndex = 0;
+            // 
+            // Start
+            // 
+            this.Start.Enabled = false;
+            this.Start.Location = new System.Drawing.Point(11, 262);
+            this.Start.Name = "Start";
+            this.Start.Size = new System.Drawing.Size(703, 23);
+            this.Start.TabIndex = 3;
+            this.Start.Text = "Start";
+            this.Start.UseVisualStyleBackColor = true;
+            this.Start.Click += new System.EventHandler(this.Start_Click);
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.progressBar1);
+            this.groupBox4.Location = new System.Drawing.Point(12, 513);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(703, 65);
+            this.groupBox4.TabIndex = 4;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Progress";
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(16, 27);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(672, 23);
+            this.progressBar1.TabIndex = 0;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(639, 583);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(75, 13);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "Version : 1.0.0";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(727, 614);
+            this.ClientSize = new System.Drawing.Size(727, 604);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.groupBox4);
+            this.Controls.Add(this.Start);
+            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "MatchTextSplitPDF";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -286,6 +381,14 @@
         private System.Windows.Forms.Button OpenSaveFolder;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox FolderSavePath;
+        private System.Windows.Forms.OpenFileDialog openPdfDialog;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Button Start;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox Log;
+        private System.Windows.Forms.CheckBox OpenOnFinal;
     }
 }
 
