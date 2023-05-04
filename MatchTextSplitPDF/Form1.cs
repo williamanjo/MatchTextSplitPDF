@@ -7,12 +7,9 @@ using iTextSharp.text.pdf;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using iTextSharp.text.pdf.parser;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Collections.Generic;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 using System.Threading.Tasks;
-using static iTextSharp.text.pdf.XfaXpathConstructor;
 using System.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MatchTextSplitPDF
 {
@@ -165,8 +162,8 @@ namespace MatchTextSplitPDF
                             WriteLog(log, Log);
                         };
 
-                        int comboBox1SelectedIndex = comboBox1.SelectedIndex;
-                        int comboBox2SelectedIndex = comboBox2.SelectedIndex;
+                        int comboBox1SelectedIndex = comboBox1.SelectedIndex + 1;
+                        int comboBox2SelectedIndex = comboBox2.SelectedIndex + 1;
                         bool splitInFoldersChecked = SplitInFolders.Checked;
                         string pdfPath = PdfPath.Text;
                         string folderSavePath = FolderSavePath.Text;
@@ -186,6 +183,7 @@ namespace MatchTextSplitPDF
                 {
                     BlockUI(true);
                     Start.Text = "Start";
+                    if (OpenOnFinal.Checked && !cts.IsCancellationRequested ) { System.Diagnostics.Process.Start("explorer.exe", FolderSavePath.Text); }
                 }
             }
             else
@@ -195,6 +193,7 @@ namespace MatchTextSplitPDF
                 cts.Cancel();
 
             }
+
         }
 
 
