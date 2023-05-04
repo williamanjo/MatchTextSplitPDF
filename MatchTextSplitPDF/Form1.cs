@@ -193,6 +193,7 @@ namespace MatchTextSplitPDF
                 WriteLog("Cancelando.....", Log);
                 Start.Text = "Start";
                 cts.Cancel();
+
             }
         }
 
@@ -207,10 +208,14 @@ namespace MatchTextSplitPDF
 
                 int rowNum = (checkBox1.Checked ? 2 : 1);
 
+
                 await Task.Run(() =>
+            {
+                try
                 {
                     while (rowNum <= totalRows && !cancellationToken.IsCancellationRequested)
                     {
+                        cts.Token.ThrowIfCancellationRequested();
                         if (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value) != "-" && myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value != null && Convert.ToString(myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value) != "#N/D")
                         {
                             var item = new ExcelData
@@ -242,8 +247,21 @@ namespace MatchTextSplitPDF
                         updateProgress(rowNum - (checkBox1.Checked ? 2 : 1));
                         rowNum++;
                     }
-                });
+                }
+                catch (System.OperationCanceledException)
+                {
+
+                    ResetCancelationToken();
+                    WriteLog("Cancelado.....", Log);
+                }
+            }, cts.Token);
+
             }
+        }
+        private void ResetCancelationToken()
+        {
+            cts?.Dispose();
+            cts = new CancellationTokenSource();
         }
 
         private void CreateFolder(string path)
