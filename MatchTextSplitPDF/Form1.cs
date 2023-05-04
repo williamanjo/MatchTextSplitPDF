@@ -10,11 +10,16 @@ using iTextSharp.text.pdf.parser;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Collections.Generic;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
+using System.Threading.Tasks;
+using static iTextSharp.text.pdf.XfaXpathConstructor;
+using System.Threading;
 
 namespace MatchTextSplitPDF
 {
     public partial class Form1 : Form
     {
+        private CancellationTokenSource cts = new CancellationTokenSource();
+
         public Form1()
         {
             InitializeComponent();
@@ -127,66 +132,120 @@ namespace MatchTextSplitPDF
 
         }
 
-        private void Start_Click(object sender, EventArgs e)
+        private async void Start_Click(object sender, EventArgs e)
         {
             if (Start.Text != "Cancelar")
             {
                 WriteLog("-----------------Starting----------------", Log);
-                BlockUI(true);
+                BlockUI(false);
                 Start.Text = "Cancelar";
 
-                using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + Log.Text)))
+                try
                 {
-
-                    var myWorksheet = xlPackage.Workbook.Worksheets[comboBoxExcelSheetNames.SelectedIndex]; //select sheet here
-                    var totalRows = myWorksheet.Dimension.End.Row;
-                    var totalColumns = myWorksheet.Dimension.End.Column;
-
-                    progressBar1.Maximum = checkBox1.Checked ? totalRows - 1 : totalRows;
-                    progressBar1.Value = 0;
-                    int rowNum = (checkBox1.Checked ? 2 : 1);
-                    while (rowNum <= totalRows && Start.Text == "Cancelar")
+                    using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + ExcelPath.Text)))
                     {
+                        var cancellationTokenSource = new CancellationTokenSource();
+                        var cancellationToken = cancellationTokenSource.Token;
 
-                        if (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value) != "-" && myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value != null && Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value) != "#N/D")
+                        var myWorksheet = xlPackage.Workbook.Worksheets[comboBoxExcelSheetNames.SelectedIndex];
+                        var totalRows = myWorksheet.Dimension.End.Row;
+                        var totalColumns = myWorksheet.Dimension.End.Column;
+
+                        progressBar1.Maximum = checkBox1.Checked ? totalRows - 2 : totalRows - 1;
+                        progressBar1.Value = 0;
+
+                        // Funções de atualização da UI.
+                        Action<int> updateProgress = value =>
                         {
-                            var item = new ExcelData
-                            {
+                            progressBar1.Invoke((Action)(() => progressBar1.Value = value));
+                        };
 
-                                SearchText = (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1.SelectedIndex].Value)),
-                                Folder = SplitInFolders.Checked ? (Convert.ToString(myWorksheet.Cells[rowNum, comboBox2.SelectedIndex].Value)) : null
-                            };
-                            WriteLog(Environment.NewLine + $"Procurando ({item.SearchText}) em {System.IO.Path.GetFileName(PdfPath.Text)}", Log);
+                        Action<string> writeLog = log =>
+                        {
+                            WriteLog(log, Log);
+                        };
 
-                            var Pag = SearchPdfText(PdfPath.Text, item.SearchText);
+                        int comboBox1SelectedIndex = comboBox1.SelectedIndex;
+                        int comboBox2SelectedIndex = comboBox2.SelectedIndex;
+                        bool splitInFoldersChecked = SplitInFolders.Checked;
+                        string pdfPath = PdfPath.Text;
+                        string folderSavePath = FolderSavePath.Text;
 
-                            if (Pag >= 1) { WriteLog($" Encontrado na Pagina {{{Pag}}}", Log); } else { WriteLog($" Não encontrado ", Log); }
 
-                            var Folder = SplitInFolders.Checked ? (FolderSavePath.Text + @"\" + item.Folder) : FolderSavePath.Text;
-
-                            CreateFolder(Folder);
-
-                            WriteLog($"Extraindo Pagina para {Folder + @"\" + item.SearchText + ".pdf"}", Log);
-                            WriteLog(Environment.NewLine +"----------------------------------------", Log);
-                            ExtractPage(PdfPath.Text, Folder + @"\" + item.SearchText + ".pdf", Pag);
-                        }
-
-                        progressBar1.Value++;
-                        rowNum++;
-                     }
-
+                        await Task.Run(() =>
+                        {
+                            DoSearch(myWorksheet, cancellationToken, updateProgress, writeLog, comboBox1SelectedIndex, comboBox2SelectedIndex, splitInFoldersChecked, pdfPath, folderSavePath).Wait();
+                        }, cancellationToken);
+                    }
                 }
-                BlockUI(false);
+                catch (Exception ex)
+                {
+                    WriteLog(ex.Message, Log);
+                }
+                finally
+                {
+                    BlockUI(true);
+                    Start.Text = "Start";
+                }
             }
             else
             {
                 WriteLog("Cancelando.....", Log);
                 Start.Text = "Start";
-                BlockUI(false);
-
+                cts.Cancel();
             }
-
         }
+
+
+        private async Task DoSearch(ExcelWorksheet myWorksheet, CancellationToken cancellationToken, Action<int> updateProgress, Action<string> writeLog, int comboBox1SelectedIndex, int comboBox2SelectedIndex, bool splitInFoldersChecked, string pdfPath, string folderSavePath)
+        {
+            using (ExcelPackage xlPackage = new ExcelPackage(new FileInfo(@"" + ExcelPath.Text)))
+            {
+
+                var totalRows = myWorksheet.Dimension.End.Row;
+                var totalColumns = myWorksheet.Dimension.End.Column;
+
+                int rowNum = (checkBox1.Checked ? 2 : 1);
+
+                await Task.Run(() =>
+                {
+                    while (rowNum <= totalRows && !cancellationToken.IsCancellationRequested)
+                    {
+                        if (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value) != "-" && myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value != null && Convert.ToString(myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value) != "#N/D")
+                        {
+                            var item = new ExcelData
+                            {
+                                SearchText = (Convert.ToString(myWorksheet.Cells[rowNum, comboBox1SelectedIndex].Value)),
+                                Folder = splitInFoldersChecked ? (Convert.ToString(myWorksheet.Cells[rowNum, comboBox2SelectedIndex].Value)) : null
+                            };
+                            WriteLog(Environment.NewLine + $"Procurando ({item.SearchText}) em {System.IO.Path.GetFileName(pdfPath)}", Log);
+
+                            var Pag = SearchPdfText(pdfPath, item.SearchText);
+
+                            if (Pag >= 1)
+                            {
+                                WriteLog($" Encontrado na Pagina {{{Pag}}}", Log);
+
+                                var Folder = splitInFoldersChecked ? (folderSavePath + @"\" + item.Folder) : folderSavePath;
+
+                                CreateFolder(Folder);
+
+                                WriteLog($"Extraindo Pagina para {Folder + @"\" + item.SearchText + ".pdf"}", Log);
+                                WriteLog(Environment.NewLine + "----------------------------------------", Log);
+                                ExtractPage(pdfPath, Folder + @"\" + item.SearchText + ".pdf", Pag);
+                            }
+                            else
+                            {
+                                WriteLog($" Não encontrado ", Log);
+                            }
+                        }
+                        updateProgress(rowNum - (checkBox1.Checked ? 2 : 1));
+                        rowNum++;
+                    }
+                });
+            }
+        }
+
         private void CreateFolder(string path)
         {
 
@@ -238,7 +297,7 @@ namespace MatchTextSplitPDF
 
         public void WriteLog(string log, System.Windows.Forms.TextBox tb)
         {
-            tb.AppendText(log + Environment.NewLine);
+            tb.Invoke((Action)(() => tb.AppendText(log + Environment.NewLine)));
         }
 
     }
